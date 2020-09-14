@@ -101,16 +101,15 @@ for ep in range(N_EPOCHS):
         # Update the weights
         optimizerD.step()
 
-        print("Train Epoch: {} LossD: {} LossG: {}".format(ep + 1, lossD,
-                                                           lossG))
+    print("Train Epoch: {} LossD: {} LossG: {}".format(ep + 1, lossD, lossG))
 
-# Test loop
-for ep in range(N_EPOCHS):
+""" Test """
+test_data = torch.utils.data.TensorDataset(X_test, Y_test)
+test_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
+                                         shuffle=True)
+for i, (x, y) in enumerate(test_iter):
     N = len(x)
     ## Test with real data ##
-    # Update the gradients to zero
-    optimizerD.zero_grad()
-
     # Forward pass
     prob_out = discriminator(x, y)
     prob_real = torch.ones((N, 1)).type(torch.float64)
@@ -119,9 +118,6 @@ for ep in range(N_EPOCHS):
     lossD = loss_func(prob_out, prob_real)
 
     ## Test with generated data ##
-    # Update the gradients to zero
-    optimizerD.zero_grad()
-
     # Forward pass on generator
     noise = prior.sample((N, NOISE_DIM)).type(torch.float64)
     x_gen = generator(noise, y)
@@ -133,6 +129,4 @@ for ep in range(N_EPOCHS):
     # Loss
     lossG = loss_func(prob_out, prob_real)
 
-    print("Test Epoch: {} LossD: {} LossG: {}".format(ep + 1, lossD, lossG))
-
-
+    print("Test Epoch: {} LossD: {} LossG: {}".format(i + 1, lossD, lossG))
