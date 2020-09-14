@@ -9,16 +9,18 @@ class Encoder(nn.Module):
 
         self.input = nn.Linear(input_dim + label_dim, hidden_dim)
         self.hidden = nn.Linear(hidden_dim, hidden_dim)
-        self.output = nn.Linear(hidden_dim, latent_dim)
+        self.mu_z = nn.Linear(hidden_dim, latent_dim)
+        self.std_z = nn.Linear(hidden_dim, latent_dim)
 
     def forward(self, x, label):
         out = self.input(torch.cat((x, label), -1))
         out = F.relu(out)
         out = self.hidden(out)
         out = F.relu(out)
-        out = self.output(out)
+        mu_z = self.mu_z(out)
+        std_z = self.std_z(out)
 
-        return out
+        return mu_z, std_z
 
 
 class Decoder(nn.Module):
@@ -27,16 +29,18 @@ class Decoder(nn.Module):
 
         self.input = nn.Linear(latent_dim + label_dim, hidden_dim)
         self.hidden = nn.Linear(hidden_dim, hidden_dim)
-        self.output = nn.Linear(hidden_dim, output_dim)
+        self.mu_x = nn.Linear(hidden_dim, output_dim)
+        self.std_x = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, z, label):
         out = self.input(torch.cat((z, label), -1))
         out = F.relu(out)
         out = self.hidden(out)
         out = F.relu(out)
-        out = self.output(out)
+        mu_x = self.mu_x(out)
+        std_x = self.std_x(out)
 
-        return out
+        return mu_x, std_x
 
 
 class cVAE(nn.Module):
@@ -47,7 +51,19 @@ class cVAE(nn.Module):
         self.decoder = Decoder(latent_dim, label_dim, hidden_dim, input_dim)
 
     def forward(self, x, label):
-        latent = self.encoder(x, label)
-        out = self.decoder(latent, label)
+        # Encoder
+        mu_z, std_z = self.encoder(x, label)
 
-        return out
+        # Sample z
+        norm_dist = torch.distributions.Normal(0, 1)
+        eps = norm_dist.sample((len(x), std_z.shape[1]))
+
+        z_sample = mu_z + eps * std_z
+
+        # Decoder
+        mu_x, std_x = self.decoder(z_sample, label)
+        eps = norm_dist.sample((len(x), std_x.shape[1]))
+
+        x_sample = mu_x + eps * std_x
+
+        return mu_z, std_z, z_sample, mu_x, std_x, x_sample

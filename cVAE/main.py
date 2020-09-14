@@ -37,6 +37,30 @@ LABEL_DIM = Y_train.shape[1]
 LATENT_DIM = 5
 HIDDEN_DIM = 20
 
+
+""" Loss function """
+def loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample):
+    S = x_sample.shape[0]
+
+    # log posterior q(z|x)
+    q_z_dist = torch.distributions.Normal(mu_z, std_z)
+    log_q_z = q_z_dist.log_prob(z_sample)
+
+    # log likelihood p(x|z)
+    p_x_dist = torch.distributions.Normal(mu_x, std_x)
+    log_p_x = p_x_dist.log_prob(x_sample)
+
+    # log prior p(z)
+    p_z_dist = torch.distributions.Normal(0, 1)
+    log_p_z = p_z_dist.log_prob(z_sample)
+
+    loss = (1 / S) * (
+        torch.sum(log_q_z) - torch.sum(log_p_x) - torch.sum(log_p_z)
+    )
+
+    return loss
+
+
 """ Train the model """
 train_data = torch.utils.data.TensorDataset(X_train, Y_train)
 train_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
@@ -45,22 +69,18 @@ train_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
 # Define the model
 model = cVAE(INPUT_DIM, LABEL_DIM, HIDDEN_DIM, LATENT_DIM).type(torch.float64)
 
-loss_func = torch.nn.MSELoss()
-
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-
-""" Train """
 for ep in range(N_EPOCHS):
     for x, y in train_iter:
         # Update the gradients to zero
         optimizer.zero_grad()
 
         # Forward pass
-        x_out = model(x, y)
+        mu_z, std_z, z_sample, mu_x, std_x, x_sample = model(x, y)
 
         # Loss
-        loss = loss_func(x_out, x)
+        loss = loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample)
 
         # Backward pass
         loss.backward()
@@ -77,12 +97,9 @@ test_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
                                          shuffle=True)
 for i, (x, y) in enumerate(test_iter):
     # Forward pass
-    x_out = model(x, y)
+    mu_z, std_z, z_sample, mu_x, std_x, x_sample = model(x, y)
 
     # Loss
-    loss = loss_func(x_out, x)
+    loss = loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample)
 
     print("Test Epoch: {} Loss: {}".format(i + 1, loss))
-
-
-
