@@ -5,6 +5,8 @@ import pandas as pd
 
 from model import cVAE
 
+torch.manual_seed(42)
+
 """ Organize dataset """
 bos = load_boston()
 df = pd.DataFrame(bos.data)
@@ -43,11 +45,12 @@ def loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample):
     S = x_sample.shape[0]
 
     # log posterior q(z|x)
-    q_z_dist = torch.distributions.Normal(mu_z, std_z)
+    q_z_dist = torch.distributions.Normal(mu_z, torch.exp(std_z))
+    # print(std_z[0,0])
     log_q_z = q_z_dist.log_prob(z_sample)
-
+    
     # log likelihood p(x|z)
-    p_x_dist = torch.distributions.Normal(mu_x, std_x)
+    p_x_dist = torch.distributions.Normal(mu_x, torch.exp(std_x))
     log_p_x = p_x_dist.log_prob(x_sample)
 
     # log prior p(z)
@@ -63,8 +66,7 @@ def loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample):
 
 """ Train the model """
 train_data = torch.utils.data.TensorDataset(X_train, Y_train)
-train_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
-                                         shuffle=True)
+train_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE)
 
 # Define the model
 model = cVAE(INPUT_DIM, LABEL_DIM, HIDDEN_DIM, LATENT_DIM).type(torch.float64)
@@ -72,21 +74,43 @@ model = cVAE(INPUT_DIM, LABEL_DIM, HIDDEN_DIM, LATENT_DIM).type(torch.float64)
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 for ep in range(N_EPOCHS):
-    for x, y in train_iter:
+    for i, (x, y) in enumerate(train_iter):
         # Update the gradients to zero
         optimizer.zero_grad()
 
         # Forward pass
         mu_z, std_z, z_sample, mu_x, std_x, x_sample = model(x, y)
+        print(i, std_z[0,0])
 
         # Loss
         loss = loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample)
 
+        if i == 4 and ep == 20:
+            for p in model.parameters():
+                if p.requires_grad:
+                    print(p.name, p.data)
+
         # Backward pass
         loss.backward()
 
+        if i == 4 and ep == 20:
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            for p in model.parameters():
+                if p.requires_grad:
+                    print(p.name, p.grad)
+
+
         # Update the weights
         optimizer.step()
+        if i == 4 and ep == 20:
+            print("########################################")
+            print("########################################")
+            print("########################################")
+            for name, param in model.named_parameters():
+                if param.requires_grad:
+                    print(name, param.data)
 
     print("Train Epoch: {} Loss: {}".format(ep + 1, loss))
 

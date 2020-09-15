@@ -55,15 +55,13 @@ class cVAE(nn.Module):
         mu_z, std_z = self.encoder(x, label)
 
         # Sample z
-        norm_dist = torch.distributions.Normal(0, 1)
-        eps = norm_dist.sample((len(x), std_z.shape[1]))
-
-        z_sample = mu_z + eps * std_z
+        eps = torch.randn_like(std_z)
+        z_samples = mu_z + eps * torch.exp(std_z)
 
         # Decoder
-        mu_x, std_x = self.decoder(z_sample, label)
-        eps = norm_dist.sample((len(x), std_x.shape[1]))
+        mu_x, std_x = self.decoder(z_samples, label)
+        eps = torch.randn_like(std_x)
 
-        x_sample = mu_x + eps * std_x
+        x_samples = mu_x + eps * torch.exp(std_x)
 
-        return mu_z, std_z, z_sample, mu_x, std_x, x_sample
+        return mu_z, std_z, z_samples, mu_x, std_x, x_samples
