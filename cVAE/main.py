@@ -21,8 +21,8 @@ data = data.apply(
 data["Price"] = df.Price
 
 # Dataset to numpy
-X = torch.tensor(data.drop("Price", axis=1).values)
-Y = torch.tensor(data["Price"].values)
+X = torch.tensor(data.drop("Price", axis=1).values).type(torch.float64)
+Y = torch.tensor(data["Price"].values).type(torch.float64)
 
 # Split dataset for test and train
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3,

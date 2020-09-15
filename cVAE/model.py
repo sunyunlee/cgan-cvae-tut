@@ -8,14 +8,18 @@ class Encoder(nn.Module):
         super().__init__()
 
         self.input = nn.Linear(input_dim + label_dim, hidden_dim)
+        self.bn1 = nn.BatchNorm1d(hidden_dim)
         self.hidden = nn.Linear(hidden_dim, hidden_dim)
+        self.bn2 = nn.BatchNorm1d(hidden_dim)
         self.mu_z = nn.Linear(hidden_dim, latent_dim)
         self.std_z = nn.Linear(hidden_dim, latent_dim)
 
     def forward(self, x, label):
         out = self.input(torch.cat((x, label), -1))
+        out = self.bn1(out)
         out = F.relu(out)
         out = self.hidden(out)
+        out = self.bn2(out)
         out = F.relu(out)
         mu_z = self.mu_z(out)
         std_z = self.std_z(out)
@@ -28,14 +32,18 @@ class Decoder(nn.Module):
         super().__init__()
 
         self.input = nn.Linear(latent_dim + label_dim, hidden_dim)
+        self.bn1 = nn.BatchNorm1d(hidden_dim)
         self.hidden = nn.Linear(hidden_dim, hidden_dim)
+        self.bn2 = nn.BatchNorm1d(hidden_dim)
         self.mu_x = nn.Linear(hidden_dim, output_dim)
         self.std_x = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, z, label):
         out = self.input(torch.cat((z, label), -1))
+        out = self.bn1(out)
         out = F.relu(out)
         out = self.hidden(out)
+        out = self.bn2(out)
         out = F.relu(out)
         mu_x = self.mu_x(out)
         std_x = self.std_x(out)
