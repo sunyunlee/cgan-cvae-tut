@@ -80,37 +80,15 @@ for ep in range(N_EPOCHS):
 
         # Forward pass
         mu_z, std_z, z_sample, mu_x, std_x, x_sample = model(x, y)
-        print(i, std_z[0,0])
 
         # Loss
         loss = loss_fn(mu_z, std_z, z_sample, mu_x, std_x, x_sample)
 
-        if i == 4 and ep == 20:
-            for p in model.parameters():
-                if p.requires_grad:
-                    print(p.name, p.data)
-
         # Backward pass
         loss.backward()
 
-        if i == 4 and ep == 20:
-            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-            for p in model.parameters():
-                if p.requires_grad:
-                    print(p.name, p.grad)
-
-
         # Update the weights
         optimizer.step()
-        if i == 4 and ep == 20:
-            print("########################################")
-            print("########################################")
-            print("########################################")
-            for name, param in model.named_parameters():
-                if param.requires_grad:
-                    print(name, param.data)
 
     print("Train Epoch: {} Loss: {}".format(ep + 1, loss))
 
