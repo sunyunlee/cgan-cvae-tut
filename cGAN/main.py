@@ -58,10 +58,10 @@ loss_func = torch.nn.BCELoss()
 optimizerD = torch.optim.Adam(discriminator.parameters(), lr=lr)
 optimizerG = torch.optim.Adam(generator.parameters(), lr=lr)
 
-""" Train Discriminator """
 for ep in range(N_EPOCHS):
     for x, y in train_iter:
         N = len(x)
+        """ Train Discriminator """
         ## Train with real data ##
         # Update the gradients to zero
         optimizerD.zero_grad()
@@ -79,7 +79,6 @@ for ep in range(N_EPOCHS):
         # Update the weights
         optimizerD.step()
 
-
         ## Train with generated data ##
         # Update the gradients to zero
         optimizerD.zero_grad()
@@ -93,13 +92,36 @@ for ep in range(N_EPOCHS):
         prob_real = torch.zeros((N, 1)).type(torch.float64)
 
         # Loss
+        lossD_G = loss_func(prob_out, prob_real)
+
+        # Backward pass
+        lossD_G.backward()
+
+        # Update the weights
+        optimizerD.step()
+
+        """ Train Generator """
+        # Update the gradients to zero
+        optimizerG.zero_grad()
+
+        # Forward pass on generator
+        # TODO: find out if I should use the same noise as above or sample
+        #  new noise
+        noise = prior.sample((N, NOISE_DIM)).type(torch.float64)
+        x_gen = generator(noise, y)
+
+        # Forward pass on discriminator
+        prob_out = discriminator(x_gen, y)
+        prob_real = torch.ones((N, 1)).type(torch.float64)
+
+        # Loss
         lossG = loss_func(prob_out, prob_real)
 
         # Backward pass
         lossG.backward()
 
         # Update the weights
-        optimizerD.step()
+        optimizerG.step()
 
     print("Train Epoch: {} LossD: {} LossG: {}".format(ep + 1, lossD, lossG))
 
