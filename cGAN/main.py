@@ -123,7 +123,8 @@ for ep in range(N_EPOCHS):
         # Update the weights
         optimizerG.step()
 
-    print("Train Epoch: {} LossD: {} LossG: {}".format(ep + 1, lossD, lossG))
+    print("Train Epoch: {} LossD: {} LossD_G: {} LossG: {}"
+          .format(ep + 1, lossD, lossD_G, loss_G))
 
 """ Test """
 test_data = torch.utils.data.TensorDataset(X_test, Y_test)
