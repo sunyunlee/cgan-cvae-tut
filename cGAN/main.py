@@ -131,6 +131,7 @@ test_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
                                          shuffle=True)
 for i, (x, y) in enumerate(test_iter):
     N = len(x)
+    """ Testing the discriminator """
     ## Test with real data ##
     # Forward pass
     prob_out = discriminator(x, y)
@@ -149,6 +150,13 @@ for i, (x, y) in enumerate(test_iter):
     prob_real = torch.zeros((N, 1)).type(torch.float64)
 
     # Loss
-    lossG = loss_func(prob_out, prob_real)
+    lossD_G = loss_func(prob_out, prob_real)
 
-    print("Test Epoch: {} LossD: {} LossG: {}".format(i + 1, lossD, lossG))
+    """ Testing the generator """
+    noise = prior.sample((N, NOISE_DIM)).type(torch.float64)
+    x_gen = generator(noise, y)
+
+    lossG = torch.nn.MSELoss(x_gen, x)
+
+    print("Test Epoch: {} LossD: {} LossD_G: {} LossG: "
+          .format(i + 1, lossD,  lossD_G, lossG))
