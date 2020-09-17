@@ -124,7 +124,7 @@ for ep in range(N_EPOCHS):
         optimizerG.step()
 
     print("Train Epoch: {} LossD: {} LossD_G: {} LossG: {}"
-          .format(ep + 1, lossD, lossD_G, loss_G))
+          .format(ep + 1, lossD, lossD_G, lossG))
 
 """ Test """
 test_data = torch.utils.data.TensorDataset(X_test, Y_test)
