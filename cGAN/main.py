@@ -130,6 +130,9 @@ for ep in range(N_EPOCHS):
 test_data = torch.utils.data.TensorDataset(X_test, Y_test)
 test_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
                                          shuffle=True)
+
+
+mse_loss_fn = torch.nn.MSELoss().type(torch.float64)
 for i, (x, y) in enumerate(test_iter):
     N = len(x)
     """ Testing the discriminator """
@@ -155,9 +158,9 @@ for i, (x, y) in enumerate(test_iter):
 
     """ Testing the generator """
     noise = prior.sample((N, NOISE_DIM)).type(torch.float64)
-    x_gen = generator(noise, y)
+    x_gen2 = generator(noise, y)
 
-    lossG = torch.nn.MSELoss(x_gen, x)
+    lossG = mse_loss_fn(x, x_gen2)
 
-    print("Test Epoch: {} LossD: {} LossD_G: {} LossG: "
+    print("Test Epoch: {} LossD: {} LossD_G: {} LossG: {}"
           .format(i + 1, lossD,  lossD_G, lossG))
