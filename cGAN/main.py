@@ -36,7 +36,7 @@ Y_test = Y_test.view(-1, 1)
 # Define hyperparameters
 N_EPOCHS = 50
 BATCH_SIZE = 64
-lr = 0.001
+lr = 0.001 
 INPUT_DIM = X_train.shape[1]
 LABEL_DIM = Y_train.shape[1]
 NOISE_DIM = 5
@@ -132,7 +132,6 @@ test_iter = torch.utils.data.DataLoader(train_data, batch_size=BATCH_SIZE,
                                          shuffle=True)
 
 
-mse_loss_fn = torch.nn.MSELoss().type(torch.float64)
 for i, (x, y) in enumerate(test_iter):
     N = len(x)
     """ Testing the discriminator """
@@ -160,7 +159,7 @@ for i, (x, y) in enumerate(test_iter):
     noise = prior.sample((N, NOISE_DIM)).type(torch.float64)
     x_gen2 = generator(noise, y)
 
-    lossG = mse_loss_fn(x, x_gen2)
+    lossG = torch.nn.MSELoss()(x, x_gen2)
 
     print("Test Epoch: {} LossD: {} LossD_G: {} LossG: {}"
           .format(i + 1, lossD,  lossD_G, lossG))

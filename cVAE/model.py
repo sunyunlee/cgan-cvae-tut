@@ -50,7 +50,6 @@ class Decoder(nn.Module):
 
         return mu_x, std_x
 
-
 class cVAE(nn.Module):
     def __init__(self, input_dim, label_dim, hidden_dim, latent_dim):
         super().__init__()
